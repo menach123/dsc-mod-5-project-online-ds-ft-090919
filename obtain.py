@@ -157,14 +157,14 @@ def remove_cms(df):
 class DATA_CLASS(object):
     
     def __init__(self):
-        self.poverty_df = ob.upload_county_acs_data('ACSDP5Y2012.DP03_data_with_overlays_2019-12-31T163946.csv')
-        self.population_df = ob.upload_county_acs_data('ACSDP5Y2012.DP05_data_with_overlays_2019-12-31T193014.csv')
-        df = ob.merge_acs_data( self.poverty_df,population_df)
-        df = ob.remove_duplicate_countystate(df)
+        self.poverty_df = upload_county_acs_data('ACSDP5Y2012.DP03_data_with_overlays_2019-12-31T163946.csv')
+        self.population_df = upload_county_acs_data('ACSDP5Y2012.DP05_data_with_overlays_2019-12-31T193014.csv')
+        df = merge_acs_data( self.poverty_df,self.population_df)
+        df = remove_duplicate_countystate(df)
         self.acs_data = df
-        self.cms_df = ob.cms_data()
-        self.df = cms_df.merge(df.drop(columns =['County','State']), how='left', on=['CountyState'])
-        self.initial_df = cms_df.merge(df.drop(columns =['County','State']), how='left', on=['CountyState'])
+        self.cms_df = cms_data()
+        self.df = self.cms_df.merge(df.drop(columns =['County','State']), how='left', on=['CountyState'])
+        self.initial_df = self.cms_df.merge(df.drop(columns =['County','State']), how='left', on=['CountyState'])
         
         self.target = 'ratio_to_max_payment'
         self.target_df = self.df[self.target]
@@ -172,6 +172,9 @@ class DATA_CLASS(object):
         pass
         
     def set_target(self, column):
+        """
+        Entering the target column
+        """
         self.target = column
         self.target_df = self.df[self.target]
         pass
@@ -180,14 +183,36 @@ class DATA_CLASS(object):
         """
         Separating the numerical columns from the object columns
         """
-        self.df, self.object_df = ob.separate_num_columns(self.df)
+        self.df, self.object_df = separate_num_columns(self.df)
         pass
 
     def tree_dataframe(self):
         """
-
+        Dataframe for tree modeling, Target column is separate.
         """
         columns = ['Percent_EMPLOYMENT_STATUS_Population_16_years_and_over',
+                    'Percent_EMPLOYMENT_STATUS_Civilian_labor_force',
+                    'Percent_EMPLOYMENT_STATUS_Females_16_years_and_over',
+                    'Percent_EMPLOYMENT_STATUS_Own_children_under_6_years',
+                    'Percent_EMPLOYMENT_STATUS_Own_children_6_to_17_years',
+                    'Percent_COMMUTING_TO_WORK_Workers_16_years_and_over',
+                    'Percent_HEALTH_INSURANCE_COVERAGE_Civilian_noninstitutionalized_population',
+                    'Percent_HEALTH_INSURANCE_COVERAGE_Civilian_noninstitutionalized_population_under_18_years',
+                    'Percent_HEALTH_INSURANCE_COVERAGE_Civilian_noninstitutionalized_population_18_to_64_years',
+                    'Percent_HEALTH_INSURANCE_COVERAGE_In_labor_force',
+                    'Percent_HEALTH_INSURANCE_COVERAGE_In_labor_force_Employed',
+                    'Percent_HEALTH_INSURANCE_COVERAGE_In_labor_force_Unemployed',
+                    'Percent_HEALTH_INSURANCE_COVERAGE_Not_in_labor_force',
+                    'Percent_SEX_AND_AGE_18_years_and_over.1',
+                    'Percent_SEX_AND_AGE_65_years_and_over.1',
+                    'Percent_RACE_Race_alone_or_in_combination_with_one_or_more_other_races_Total_population',
+                    'Percent_HISPANIC_OR_LATINO_AND_RACE_Total_population']
+
+        for i in columns:
+            self.df[i] = self.df[i]/ self.df['SEX_AND_AGE_Total_population']
+
+        columns = ['max_payment',
+        'Percent_EMPLOYMENT_STATUS_Population_16_years_and_over',
         'Percent_EMPLOYMENT_STATUS_In_labor_force',
         'Percent_EMPLOYMENT_STATUS_In_labor_force_Civilian_labor_force',
         'Percent_EMPLOYMENT_STATUS_In_labor_force_Civilian_labor_force_Employed',
@@ -334,7 +359,6 @@ class DATA_CLASS(object):
         'Percent_SEX_AND_AGE_65_years_and_over.1',
         'Percent_SEX_AND_AGE_Male.2',
         'Percent_SEX_AND_AGE_Female.2',
-        'Percent_RACE_Total_population',
         'Percent_RACE_One_race',
         'Percent_RACE_Two_or_more_races',
         'Percent_RACE_One_race.1',
@@ -371,7 +395,6 @@ class DATA_CLASS(object):
         'Percent_RACE_Asian',
         'Percent_RACE_Native_Hawaiian_and_Other_Pacific_Islander',
         'Percent_RACE_Some_other_race',
-        'Percent_HISPANIC_OR_LATINO_AND_RACE_Total_population',
         'Percent_HISPANIC_OR_LATINO_AND_RACE_Hispanic_or_Latino_(of_any_race)',
         'Percent_HISPANIC_OR_LATINO_AND_RACE_Hispanic_or_Latino_(of_any_race)_Mexican',
         'Percent_HISPANIC_OR_LATINO_AND_RACE_Hispanic_or_Latino_(of_any_race)_Puerto_Rican',
@@ -405,18 +428,20 @@ class DATA_CLASS(object):
         for i in self.cms_label_df.columns:
             columns.append(i)   
         self.tree_df = self.df[columns]
+        
         pass
 
-    def provider_grouped_df(self):
+    def provider_grouped_df(self, min_procedure=0):
         """
         Dataframes for clustering grouping by provider with the CMS label mulitpled by the target
         Output- labels mulipied by target, adding CMS data
         """
         label_df = self.cms_label_df
         for i in label_df.columns:
-            label_df[i] = label_df[i]* cms_df.ratio_to_max_payment
-        label_df['Provider_Id'] = cms_df['Provider_Id']
+            label_df[i] = label_df[i]* self.cms_df.ratio_to_max_payment
+        label_df['Provider_Id'] = self.cms_df['Provider_Id']
+                
+        self.provider_index = self.cms_df.Provider_Id.value_counts().loc[self.cms_df.Provider_Id.value_counts()>= min_procedure].index
         self.provider_label = label_df.groupby('Provider_Id').max()
         self.provider_full_label = self.provider_label.merge(self.df.drop(columns =['County','State']), how='left', on=['CountyState'])
         pass
-    

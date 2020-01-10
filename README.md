@@ -4,101 +4,185 @@
 
 ## Introduction
 
-In this lesson, we'll review all the guidelines and specifications for the final project for Module 5.
-
+As part of Module 5 of Flatiron Data Science Program (Machine Learning), I select a dataset for the Centers for Medicare & Medicaid Services (CMS),  <a href="https://data.cms.gov/Medicare-Inpatient/Inpatient-Prospective-Payment-System-IPPS-Provider/97k6-zzx3">“Inpatient Prospective Payment System (IPPS) Provider Summary for the Top 100 Diagnosis-Related Groups (DRG) - FY2011”.</a> There are 3,*** medical providers  and cost information on top 100 most frequently billed discharges. I combined that information from the <a href="https://data.cms.gov/Medicare-Inpatient/Inpatient-Prospective-Payment-System-IPPS-Provider/97k6-zzx3">American Community Survey (ACS)</a> with county demographic, income, poverty, and commuting information. Using ACS data, I built models to predict  high cost areas, and with these models analyze  the feature importance of individual ACS classes. 
 
 ## Objectives
 
-* Understand all required aspects of the Final Project for Module 5
-* Understand all required deliverables
-* Understand what constitutes a successful project
+<ul>
+	<li>Attempt to Model the Cost Ratio from a Given Provider/Procedure using the below methods
+    <ul>
+        <li>Cluster</li>
+        <li>Decision Tree</li>
+        <li>Decision Tree Regressor</li>
+        <li>Random Forest</li>
+    </ul>
+    <li>Using attributes of these models like feature importance to analyze the information gathered from the ACS data.</li>
+</ul>
 
-## Final Project Summary
+## Exploration of the Data
 
-Congratulations! You've made it through another _intense_ module, and now you're ready to show off your newfound Machine Learning skills!
+### Centers for Medicare & Medicaid Services (CMS)
 
-![awesome](https://raw.githubusercontent.com/learn-co-curriculum/dsc-mod-5-project/master/smart.gif)
+<details><summary>Procedure Labels</summary>
 
-All that remains for Module 5 is to complete the final project!
+**DRG Definition**
+    
+DRG (diagnosis-related group) definition is a payment categories that are used for the purpose of reimbursing hospitals (especially for Medicare). Each definition represents particular clas for each case in a given category with a fixed fee regardless of the actual costs incurred. An example of a DRG definftion can be a seen below. There is 100 individual defintion in the study.
 
-## The Project
+'057 - DEGENERATIVE NERVOUS SYSTEM DISORDERS W/O MCC'
 
-For this project, you're going to select a dataset of your choosing and create a classification model. You'll start by identifying a problem you can solve with classification, and then identify a dataset. You'll then use everything you've learned about Data Science and Machine Learning thus far to source a dataset, preprocess and explore it, and then build and interpret a classification model that answers your chosen question.
+**ID**
+
+There is designated ID number for each definition (see "057").
+
+**Label**
+
+There are 57 individual procedure names. (see "DEGENERATIVE NERVOUS SYSTEM DISORDERS").
+
+**Complications / Comorbidity Conditions**
+
+In some definitions have pre-existing complication or comordibity information that effect the treat for given procedure. These are options for these information: 
+    <ul>
+        <li>without_ccmcc</li>
+        <li>with_mcc</li>
+        <li>with_cc</li>
+        <li>with_ccmcc</li>
+    </ul>
+
+</details>
+
+<details><summary>Provider Information</summary>
+
+**Provider Id**
+
+The CMS Certification Number (CCN) assigned to the Medicare certified hospital facility.
+
+**Provider Name**
+
+The name of the provider.
+
+**Provider Street Address**
+
+The provider’s street address.
+
+**Provider City**
+
+The city where the provider is located.
+
+**Provider State**
+
+The state where the provider is located.
+
+**Provider Zip Code**
+
+The provider’s zip code.
+
+**Provider HRR**
+
+The Hospital Referral Region (HRR) where the provider is located
+ 
+</details>
+
+<details><summary>Cost Information</summary>
+
+**Total Discharges**
+
+The number of discharges billed by the provider for inpatient hospital services.
+
+**Average Covered Charges**
+
+The provider's average charge for services covered by Medicare for all
+discharges in the MS-DRG. These will vary from hospital to hospital because of differences in hospital
+charge structures.
+
+**Average Total Payments**
+
+The average total payments to all providers for the MS-DRG including the MSDRG amount, teaching, disproportionate share, capital, and outlier payments for all cases. Also included in average total payments are co-payment and deductible amounts that the patient is responsible for and any additional payments by third parties for coordination of benefits.
+
+**Average Medicare Payments**
+
+The average amount that Medicare pays to the provider for Medicare's
+share of the MS-DRG. 
+
+**Cost Ratio (Calculated in Pre Processing)**
+
+The ratio of the Average Total Payment divided by the most expensive cost for the for that particular DRG definition
+
+</details>
+
+###  American Community Survey (ACS)
+
+American Community Survey is ongoing survey conducted by the US Census Bureau . The survey collect various information about localities all across the US providing a valuable resource for body public and private researcher and planners. For the  model I use data the 2012 survey. Below are categories selected.
+
+<ul>
+    <li>Employment Status</li>
+    <li>Commuting to Work</li>
+    <li>Occupation</li>
+    <li>Industry</li>
+    <li>Class of Worker</li>
+    <li>Income and Benefits</li>
+    <li>Health Insurance Coverage</li>
+    <li>Poverty</li>
+    <li>Sex and Age</li>
+    <li>Race</li>
+    <li>Poverty</li>
+</ul>
 
 
-### Selecting a Data Set
+## Modeling with Results
 
-We encourage you to be very thoughtful when identifying your problem and selecting your data set--an overscoped project goal or a poor data set can quickly bring an otherwise promising project to a grinding halt.
+<details><summary>Clustering</summary>
 
-To help you select an appropriate data set for this project, we've set some guidelines:
+I attempted to use clustering to find groupings in the  ACS data, CMS data, and combined data. Unfortunate I did not find distinct clusters based on the calinski harabasz score. See results of the clustering for various cluster sizes.
 
-1. Your dataset should work for classification. The classification task can be either binary or multiclass, as long as it's a classification model.   
+![](Image/cluster.png)
 
-2. Your dataset needs to be of sufficient complexity. Try to avoid picking an overly simple dataset. Try to avoid extremely small datasets, as well as the most common datasets like titanic, iris, MNIST, etc. We want to see all the steps of the Data Science Process in this project--it's okay if the dataset is mostly clean, but we expect to see some preprocessing and exploration. See the following section, **_Data Set Constraints_**, for more information on this.   
+</details>
 
-3. On the other end of the spectrum, don't pick a problem that's too complex, either. Stick to problems that you have a clear idea of how you can use machine learning to solve it. For now, we recommend you stay away from overly complex problems in the domains of Natural Language Processing or Computer Vision--although those domains make use of Supervised Learning, they come with a lot of other special requirements and techniques that you don't know yet (but you'll learn soon!). If you're chosen problem feels like you've overscoped, then it probably is. If you aren't sure if your problem scope is appropriate, double check with your instructor!  
+<details><summary>Decision Tree Regressor</summary>
 
-4. **_Serious Bonus Points_** if some or all of the data is data you have to source yourself through web scraping or interacting with a 3rd party API! Having projects that show off your ability to source data effectively make you look that much more impressive when showing your work off to potential employers!
+I also attempted to use regression with decision trees because I wanted to produce a continuous result. The output did not effectively reflect the data. See results compared to the actual data in the below graph. 
 
-### Data Set Constraints
+![](Image/regression_decision_tree.png)
 
-When selecting a data set, be sure to take into consideration the following constraints:
+</details>
 
-1. Your data set can't be one we've already worked with in any labs.
-2. Your data set should contain a minimum of 1000 rows.    
-3. Your data set should contain a minimum of 10 predictor columns, before any one-hot encoding is performed.   
-4. Your instructor must provide final approval on your data set.
+##### Random Forest
+ 
+I decided to bin my target data into three columns: top 25% of cost ratios, and everything else. This binning strategy leads to an imbalanced output with the lower value being significantly more than the extreme bin. This imbalance leads the model to over select for the lower bin. In order remedy this problem, we oversampled the top 25% through random choice with replacement. The final model produced good result with a 80.5% accuracy. 
 
-### Problem First, or Data First?
-
-There are two ways that you can about getting started: **_Problem-First_** or **_Data-First_**.
-
-**_Problem-First_**: Start with a problem that you want to solve with classification, and then try to find the data you need to solve it.  If you can't find any data to solve your problem, then you should pick another problem.
-
-**_Data-First_**: Take a look at some of the most popular internet repositories of cool data sets we've listed below. If you find a data set that's particularly interesting for you, then it's totally okay to build your problem around that data set.
-
-There are plenty of amazing places that you can get your data from. We recommend you start looking at data sets in some of these resources first:
-
-* [UCI Machine Learning Datasets Repository](https://archive.ics.uci.edu/ml/datasets.html)
-* [Kaggle Datasets](https://www.kaggle.com/datasets)
-* [Awesome Datasets Repo on Github](https://github.com/awesomedata/awesome-public-datasets)
-* [New York City Open Data Portal](https://opendata.cityofnewyork.us/)
-* [Inside AirBNB ](http://insideairbnb.com/)
+![](Image/random_forest.png)
 
 
-## The Deliverables
 
-For online students, your completed project should contain the following four deliverables:
+## Interpreting Feature Importance
 
-1. A **_Jupyter Notebook_** containing any code you've written for this project. This work will need to be pushed to your GitHub repository in order to submit your project.
 
-2. An organized **README.md** file in the GitHub repository that describes the contents of the repository. This file should be the source of information for navigating through the repository. 
+Using the feature importance method in scikit learn, I selected the 3 most influential ACS data features in the Random Forest model to explore, and those top features were all commuting to work data.
 
-3. A **_[Blog Post](https://github.com/learn-co-curriculum/dsc-welcome-blogging)_**.
+<details><summary>Percent of People that Used Public Transportation</summary>
 
-4. An **_"Executive Summary" PowerPoint Presentation_** that gives a brief overview of your problem/dataset, and each step of the OSEMN process.
+The below graph display the ratio of the payment to the maximiuim procedure payment versus to the percent of county residents use public transport. As can be see in the graph, the average of the ratio for the binned values increased as the percent of pubilc transport users increased. The averages of the three largest categories are above the 25% threshold.
 
-Note: On-campus students may have different deliverables, please speak with your instructor.
+![](Image/pubilc_transport.png)
 
-### Jupyter Notebook Must-Haves
+</details>
 
-For this project, your Jupyter Notebook should meet the following specifications:
+<details><summary> Percent of People that Drive Alone </summary>
 
-**_Organization/Code Cleanliness_**
+This graph shows the cost ratio versus the percent of county residents that drive to work alone using a car, tuck , or van. Inverse to the previous graph, the average cost ratio decreased as the binned percents increased. The three smallest bins' averages were above the threshold.
 
-* The notebook should be well organized, easy to follow, and code is commented where appropriate.  
-    * Level Up: The notebook contains well-formatted, professional looking markdown cells explaining any substantial code. All functions have docstrings that act as professional-quality documentation.  
-* The notebook is written to technical audiences with a way to both understand your approach and reproduce your results. The target audience for this deliverable is other data scientists looking to validate your findings.  
+![](Image/driving_alone.png)
 
-**_Process, Methodology, and Findings_**
+</details>
 
-* Your notebook should contain a clear record of your process and methodology for exploring and preprocessing your data, building and tuning a model, and interpreting your results.
-* We recommend you use the OSEMN process to help organize your thoughts and stay on track.
+<details><summary>Percent of People that Walk</summary>
 
-### Blog Post Must-Haves
+The below graph display the cost ratio versus to the percent of county residents that walk. The feature produces more mixed results. The average ratio for the binned values move around as the percent of pubilc transport users increased.
 
-Refer back to the [Blogging Guidelines](https://github.com/learn-co-curriculum/dsc-welcome-blogging) for the technical requirements and blog ideas.
+![](Image/walked.png)
 
-## Grading Rubric 
+</details>
 
-Online students can find a PDF of the grading rubric for the project [here](https://github.com/learn-co-curriculum/dsc-mod-5-project/blob/master/module5_project_rubric.pdf). _Note: On-campus students may have different requirements, please speak with your instructor._ 
+
+
